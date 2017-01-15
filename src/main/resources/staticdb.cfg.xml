@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-configuration PUBLIC "-//Hibernate/Hibernate Configuration DTD 3.0//EN" 
+"http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
+ 
+<hibernate-configuration>
+    <session-factory>
+        <property name="show_sql">true</property>
+        <property name="format_sql">true</property>
+        <property name="connection.driver_class">com.mysql.jdbc.Driver</property>
+        <property name="connection.url">jdbc:mysql://192.168.0.170/swgresource</property>
+        <property name="connection.username">swgcraft</property>
+        <property name="connection.password">devops</property>
+         
+        <property name="hibernate.hbm2ddl.auto">update</property>
+         
+    </session-factory>
+</hibernate-configuration>
