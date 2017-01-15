@@ -9,18 +9,15 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.Persistence;
+import javax.persistence.Query;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVRecord;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
-import org.hibernate.Transaction;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.query.Query;
 import org.thylex.legendarycrafter.backend.db.entity.inv.Resource;
 import org.thylex.legendarycrafter.frontend.app.CrafterApp;
 
@@ -31,26 +28,23 @@ import org.thylex.legendarycrafter.frontend.app.CrafterApp;
 public class InventoryDB {
 
     private CrafterApp app = null;
-    private SessionFactory sf = null;
-    private Session db = null;
+    private EntityManagerFactory emf = null;
+    private EntityManager em = null;
 
     public InventoryDB(CrafterApp app) {
         this.app = app;
-        Configuration conf = new Configuration().configure("inventorydb.cfg.xml");
-        conf.addAnnotatedClass(Resource.class);
-        StandardServiceRegistryBuilder builder = new StandardServiceRegistryBuilder().applySettings(conf.getProperties());
-        sf = conf.buildSessionFactory(builder.build());
-        db = sf.openSession();
+        emf = Persistence.createEntityManagerFactory("invDB");
+        em = emf.createEntityManager();
     }
-
+    
     public List<Resource> getAllResources() {
-        Query q = db.createQuery("select i from Resource i");
-        List<Resource> retVal = new ArrayList<>(q.getResultList());
+        Query q = em.createQuery("select i from Resource i");
+        List<Resource> retVal = q.getResultList();
         return retVal;
     }
     
     public Resource getResourceByName(String resName) {
-        Query q = db.createQuery("select i from Resource i where i.name = :res");
+        Query q = em.createQuery("select i from Resource i where i.name = :res");
         q.setParameter("res", resName);
         if (q.getResultList().size() == 1) {
             return (Resource)q.getSingleResult();
@@ -94,17 +88,17 @@ public class InventoryDB {
     }
 
     public void merge(Resource res) {
-        Transaction trx = db.beginTransaction();
-        db.merge(res);
-        trx.commit();
+        em.getTransaction().begin();
+        em.merge(res);
+        em.getTransaction().commit();
     }
 
     public void close() {
-        if (db != null) {
-            db.close();
+        if (em != null) {
+            em.close();
         }
-        if (sf != null) {
-            sf.close();
+        if (emf != null) {
+            emf.close();
         }
     }
 
@@ -117,33 +111,4 @@ public class InventoryDB {
         }
         return Integer.decode(tmp);
     }
-
-//    public InventoryDB(CrafterApp app) {
-//        this.app = app;
-//        Boolean dbInit = false;
-//        String url = app.getSettings().getProp("InvDBurl");
-//        if (url == null) {
-//            String filename = app.getSettings().getProp("AppHome") + "\\inventory.db";
-//            File dummy = new File(filename);
-//            try {
-//                dummy.createNewFile();
-//                url = "jdbc:sqlite:" + filename;
-//                dummy.delete();
-//                dbInit = true;
-//            } catch (IOException ex) {
-//                Logger.getLogger(InventoryDB.class.getName()).log(Level.SEVERE, null, ex);
-//            }
-//        }
-//        
-//        try {
-//            conn = DriverManager.getConnection(url);
-//            app.getSettings().setProp("InvDBurl", url);
-//        } catch (SQLException ex) {
-//            Logger.getLogger(InventoryDB.class.getName()).log(Level.SEVERE, null, ex);
-//        }
-//        //TODO: Create fresh DB
-//        if (dbInit) {
-//            
-//        }
-//    }
 }

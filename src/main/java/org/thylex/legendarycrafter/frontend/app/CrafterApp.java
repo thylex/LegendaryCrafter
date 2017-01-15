@@ -68,7 +68,7 @@ public class CrafterApp {
         
         invDB = new InventoryDB(this);
         
-        staticDB = new StaticDB(this, "bla");
+        staticDB = new StaticDB(this);
     }
     
     public void close() {
