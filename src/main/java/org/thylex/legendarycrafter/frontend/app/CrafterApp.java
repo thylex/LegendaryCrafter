@@ -6,12 +6,9 @@
 package org.thylex.legendarycrafter.frontend.app;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 import org.thylex.legendarycrafter.backend.CrafterSettings;
 import org.thylex.legendarycrafter.backend.db.InventoryDB;
 import org.thylex.legendarycrafter.backend.db.StaticDB;
-import org.thylex.legendarycrafter.backend.db.entity.inv.Resource;
 import org.thylex.legendarycrafter.frontend.gui.CrafterGUI;
 
 /**
@@ -31,19 +28,6 @@ public class CrafterApp {
         }
         Initialize();
         gui = new CrafterGUI(this);
-        
-    }
-    
-    public Resource getInvByName(String resName) {
-        return invDB.getResourceByName(resName);
-    }
-    
-    public void updateInv(Resource res) {
-        invDB.merge(res);
-    }
-    
-    public List<Resource> getAllInv() {
-        return invDB.getAllResources();
     }
     
     public void importFromGH() {
@@ -67,7 +51,6 @@ public class CrafterApp {
         }
         
         invDB = new InventoryDB(this);
-        
         staticDB = new StaticDB(this);
     }
     
@@ -77,6 +60,14 @@ public class CrafterApp {
         staticDB.close();
         gui.setVisible(false);
         gui.dispose();
+    }
+
+    public StaticDB getStaticDB() {
+        return staticDB;
+    }
+
+    public InventoryDB getInvDB() {
+        return invDB;
     }
 
     public CrafterSettings getSettings() {

@@ -7,9 +7,6 @@ package org.thylex.legendarycrafter.frontend.gui;
 
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
-import java.awt.LayoutManager;
-import java.awt.event.FocusAdapter;
-import java.awt.event.FocusEvent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -17,7 +14,6 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
-import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableColumnModel;
 import org.thylex.legendarycrafter.backend.db.entity.inv.Resource;
 import org.thylex.legendarycrafter.frontend.app.CrafterApp;
@@ -53,16 +49,7 @@ public class CrafterGUI extends javax.swing.JFrame implements TableModelListener
         invPanel.add(new JLabel("Inventory tab"), BorderLayout.PAGE_START);
 
         // Inventory Table display
-        invTable = new JTable(new InventoryTableModel(app.getAllInv()));
-//        invTable.addFocusListener(new FocusAdapter() {
-//            @Override
-//            public void focusLost(FocusEvent e) {
-//                TableCellEditor tce = invTable.getCellEditor();
-//                if (tce != null) {
-//                    tce.stopCellEditing();
-//                }
-//            }
-//        });
+        invTable = new JTable(new InventoryTableModel(app.getInvDB().getAllResources()));
         invTable.setFillsViewportHeight(false);
         invTable.getModel().addTableModelListener(this);
         setInvColumnWidth();
@@ -90,7 +77,6 @@ public class CrafterGUI extends javax.swing.JFrame implements TableModelListener
     }
 
     @Override
-
     public void tableChanged(TableModelEvent e) {
         int col = e.getColumn();
         int row = e.getFirstRow();
@@ -98,15 +84,14 @@ public class CrafterGUI extends javax.swing.JFrame implements TableModelListener
         String name = (String) model.getValueAt(row, 0);
         Integer newAmount = (Integer) invTable.getValueAt(row, col);
 
-        Resource res = app.getInvByName(name);
+        Resource res = app.getInvDB().getResourceByName(name);
         if (res != null) {
             res.setAmount(newAmount);
-            app.updateInv(res);
+            app.getInvDB().merge(res);
             System.out.println("Amount of " + name + " changed to " + newAmount.toString());
         } else {
             System.out.println("ERROR: Unable to find resource by name: " + name);
         }
-
     }
 
     private void setInvColumnWidth() {
@@ -130,7 +115,7 @@ public class CrafterGUI extends javax.swing.JFrame implements TableModelListener
     }
 
     public void refresh() {
-        invTable.setModel(new InventoryTableModel(app.getAllInv()));
+        invTable.setModel(new InventoryTableModel(app.getInvDB().getAllResources()));
         invTable.getModel().addTableModelListener(this);
         setInvColumnWidth();
         validate();

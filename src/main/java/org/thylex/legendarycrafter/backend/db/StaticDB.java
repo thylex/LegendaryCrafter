@@ -16,6 +16,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 import javax.persistence.Query;
+import org.thylex.legendarycrafter.backend.db.entity.stat.ResourceType;
 import org.thylex.legendarycrafter.frontend.app.CrafterApp;
 
 /**
@@ -34,6 +35,16 @@ public class StaticDB {
         em = emf.createEntityManager();
     }
 
+    public ResourceType getTypeByName(String name) {
+        Query q = em.createNamedQuery("ResourceType.findByResourceTypeName");
+        q.setParameter("resourceTypeName", name);
+        if (q.getResultList().isEmpty()) {
+            return null;
+        } else {
+            return (ResourceType)q.getSingleResult();
+        }
+    }
+    
     public List<String> getProfessions() {
         Query q = em.createNamedQuery("Profession.findAll");
         return q.getResultList();
