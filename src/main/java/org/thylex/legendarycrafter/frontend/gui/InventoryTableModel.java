@@ -6,7 +6,6 @@
 package org.thylex.legendarycrafter.frontend.gui;
 
 import java.util.List;
-import javax.swing.event.TableModelEvent;
 import javax.swing.table.AbstractTableModel;
 import org.thylex.legendarycrafter.backend.db.entity.inv.Resource;
 

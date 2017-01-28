@@ -6,6 +6,7 @@
 package org.thylex.legendarycrafter.backend.db.entity.stat;
 
 import java.io.Serializable;
+import java.util.List;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -14,6 +15,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -41,6 +43,8 @@ public class Profession implements Serializable {
     private String profName;
     @Column(name = "craftingQuality")
     private Short craftingQuality;
+    @OneToMany(mappedBy="profID")
+    private List<SkillGroup> skillGroups;
 
     public Profession() {
     }
@@ -73,6 +77,15 @@ public class Profession implements Serializable {
         this.craftingQuality = craftingQuality;
     }
 
+    public List<SkillGroup> getSkillGroups() {
+        return skillGroups;
+    }
+
+    public void setSkillGroups(List<SkillGroup> skillGroups) {
+        this.skillGroups = skillGroups;
+    }
+
+    
     @Override
     public int hashCode() {
         int hash = 0;

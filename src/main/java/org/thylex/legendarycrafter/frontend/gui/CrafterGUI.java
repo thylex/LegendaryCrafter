@@ -6,8 +6,12 @@
 package org.thylex.legendarycrafter.frontend.gui;
 
 import java.awt.BorderLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.GridLayout;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
@@ -16,6 +20,7 @@ import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.TableColumnModel;
 import org.thylex.legendarycrafter.backend.db.entity.inv.Resource;
+import org.thylex.legendarycrafter.backend.db.entity.stat.Profession;
 import org.thylex.legendarycrafter.frontend.app.CrafterApp;
 
 /**
@@ -29,6 +34,8 @@ public class CrafterGUI extends javax.swing.JFrame implements TableModelListener
     private JPanel invPanel = null;
     private JTable invTable = null;
     private JPanel schPanel = null;
+    private JList schList = null;
+    private String activeProf;
 
     /**
      * Creates new form CrafterGUI
@@ -38,6 +45,9 @@ public class CrafterGUI extends javax.swing.JFrame implements TableModelListener
         initComponents();
         setTitle("Legendary Crafter");
 
+        // Get properties
+        activeProf = app.getSettings().getProp("SelectedProfession");
+        
         // Create base Tabbed Pane
         tabPane = new JTabbedPane(JTabbedPane.TOP);
 
@@ -50,23 +60,18 @@ public class CrafterGUI extends javax.swing.JFrame implements TableModelListener
 
         // Inventory Table display
         invTable = new JTable(new InventoryTableModel(app.getInvDB().getAllResources()));
-        invTable.setFillsViewportHeight(false);
+        invTable.setFillsViewportHeight(true);
         invTable.getModel().addTableModelListener(this);
         setInvColumnWidth();
         invPanel.add(new JScrollPane(invTable), BorderLayout.CENTER);
 
-        // Add inventory to Tabbed view
-        tabPane.addTab("Inventory", invPanel);
-
         // Create base Panel for Schematics view
-        schPanel = new JPanel();
-        schPanel.setLayout(new BorderLayout());
+        schPanel = setupSchematicsPanel(new JPanel());
+        schPanel.setPreferredSize(this.getContentPane().getMaximumSize());
 
-        // Add controls for schematics work
-        schPanel.add(new JLabel("Schematics tab"), BorderLayout.PAGE_START);
-
-        // Add schematics Panel to Tabbed vie
+        // Add Panels to Tabs
         tabPane.addTab("Schematics", schPanel);
+        tabPane.addTab("Inventory", invPanel);
 
         // Add Tabbed Pane to base Frame
         this.getContentPane().setLayout(new GridLayout(1, 1));
@@ -76,6 +81,68 @@ public class CrafterGUI extends javax.swing.JFrame implements TableModelListener
         this.setVisible(true);
     }
 
+    private JPanel setupSchematicsPanel(JPanel panel) {
+        panel.setLayout(new GridBagLayout());
+        GridBagConstraints grid = new GridBagConstraints();
+        grid.fill = GridBagConstraints.VERTICAL;
+
+        //First row
+        grid.gridy = 0;
+        grid.gridx = 0;
+        JComboBox profBox = new JComboBox();
+        for (Profession prof : app.getStaticDB().getAllProfessions()) {
+            profBox.addItem(prof.getProfName());
+            //System.out.println("Skill group count: " + prof.getSkillGroups().size());
+        }
+        if (activeProf != null) {
+            //TODO: pre-select the active profession
+            profBox.getModel().setSelectedItem(activeProf);
+//            for (int i = 0; i < profBox.getModel().getSize(); i++) {
+//                if (activeProf.equals(profBox.getModel().getElementAt(i).toString())) {
+//                    profBox.getModel().setSelectedItem(profBox.getModel().getElementAt(i));
+//                }
+//            }
+        }
+        profBox.addActionListener(new java.awt.event.ActionListener() {
+            @Override
+            public void actionPerformed(java.awt.event.ActionEvent e) {
+                profBoxActionPerformed(e);
+            }
+        });
+        JLabel profLabel = new JLabel("Select profession");
+        profLabel.setLabelFor(profBox);
+
+        panel.add(profLabel, grid);
+        grid.gridx = 2;
+        grid.fill = GridBagConstraints.HORIZONTAL;
+        grid.gridwidth = 3;
+        panel.add(profBox, grid);
+
+        //Second row
+        grid.gridy = 1;
+        grid.gridx = 0;
+        schList = new JList(new SchematicListModel(app, activeProf));
+        schList.setLayoutOrientation(JList.VERTICAL);
+        schList.setVisibleRowCount(10);
+//        schList.setPreferredSize(new Dimension(300, 300));
+        panel.add(new JScrollPane(schList), grid);
+
+        //Third row
+        grid.gridy = 2;
+        grid.gridx = 0;
+        panel.add(new JLabel("End1"), grid);
+        grid.gridx = 2;
+        panel.add(new JLabel("End2"), grid);
+        return panel;
+    }
+
+    private void profBoxActionPerformed(java.awt.event.ActionEvent e) {
+        JComboBox box = (JComboBox)e.getSource();
+        activeProf = box.getSelectedItem().toString();
+        app.getSettings().setProp("SelectedProfession", activeProf);
+        refresh();
+    }
+    
     @Override
     public void tableChanged(TableModelEvent e) {
         int col = e.getColumn();
@@ -118,6 +185,7 @@ public class CrafterGUI extends javax.swing.JFrame implements TableModelListener
         invTable.setModel(new InventoryTableModel(app.getInvDB().getAllResources()));
         invTable.getModel().addTableModelListener(this);
         setInvColumnWidth();
+        schList.setModel(new SchematicListModel(app, activeProf));
         validate();
     }
 
