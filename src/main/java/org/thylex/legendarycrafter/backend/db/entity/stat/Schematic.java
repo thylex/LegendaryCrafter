@@ -6,12 +6,15 @@
 package org.thylex.legendarycrafter.backend.db.entity.stat;
 
 import java.io.Serializable;
+import java.util.List;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -62,6 +65,9 @@ public class Schematic implements Serializable {
     private String objectPath;
     @Column(name = "objectGroup")
     private String objectGroup;
+    @OneToMany(mappedBy="schematicID", fetch = FetchType.LAZY)
+    @Basic(optional = true)
+    private List<SchematicIngredients> Ingredients;
 
     public Schematic() {
     }
@@ -76,6 +82,14 @@ public class Schematic implements Serializable {
 
     public void setSchematicID(String schematicID) {
         this.schematicID = schematicID;
+    }
+
+    public List<SchematicIngredients> getIngredients() {
+        return Ingredients;
+    }
+
+    public void setIngredients(List<SchematicIngredients> Ingredients) {
+        this.Ingredients = Ingredients;
     }
 
     public String getSchematicName() {

@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.thylex.legendarycrafter.frontend.gui;
+package org.thylex.legendarycrafter.frontend.models;
 
 import java.util.ArrayList;
 import javax.swing.AbstractListModel;
@@ -30,7 +30,8 @@ public class SchematicListModel extends AbstractListModel {
 //                System.out.println("Gettings schematics for group " + sg.getSkillGroupName() + sg.getSkillGroup());
                 for (Schematic s : app.getStaticDB().getSchematicByGroupName(sg.getSkillGroup())) {
 //                    System.out.println("Adding schematic: " + s.getSchematicName());
-                    values.add(s.getSchematicName());
+//                    values.add(s.getSchematicName());
+                    values.add(new Item(s, s.getSchematicName()));
                 }
             }
             schData = values.toArray();

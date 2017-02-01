@@ -23,8 +23,11 @@ import javax.persistence.Query;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
+import org.thylex.legendarycrafter.backend.db.entity.stat.ObjectType;
 import org.thylex.legendarycrafter.backend.db.entity.stat.Profession;
+import org.thylex.legendarycrafter.backend.db.entity.stat.ResourceGroup;
 import org.thylex.legendarycrafter.backend.db.entity.stat.ResourceType;
+import org.thylex.legendarycrafter.backend.db.entity.stat.ResourceTypeGroup;
 import org.thylex.legendarycrafter.backend.db.entity.stat.Schematic;
 import org.thylex.legendarycrafter.backend.db.entity.stat.SchematicIngredients;
 import org.thylex.legendarycrafter.backend.db.entity.stat.SkillGroup;
@@ -75,6 +78,7 @@ public class StaticDB {
                 Logger.getLogger(StaticDB.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
+        
         //Check Skillgroup
         Query skillgroupQ = em.createQuery("SELECT count(*) FROM ResourceType rt");
         long skillgroupCount = (long) skillgroupQ.getSingleResult();
@@ -99,6 +103,7 @@ public class StaticDB {
                 Logger.getLogger(StaticDB.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
+        
         //Check ResourceType
         Query resTypeQ = em.createQuery("SELECT count(*) FROM ResourceType rt");
         long resTypeCount = (long) resTypeQ.getSingleResult();
@@ -154,6 +159,7 @@ public class StaticDB {
                 Logger.getLogger(StaticDB.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
+        
         //Check Schematic
         Query schemQ = em.createQuery("SELECT count(*) FROM Schematic s");
         long schemCount = (long) schemQ.getSingleResult();
@@ -186,6 +192,7 @@ public class StaticDB {
                 Logger.getLogger(StaticDB.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
+        
         //Check SchematicIngredients
         Query schemIngredQ = em.createQuery("SELECT count(*) FROM SchematicIngredients si");
         long schemIngredCount = (long) schemIngredQ.getSingleResult();
@@ -197,8 +204,10 @@ public class StaticDB {
                 FileReader reader = new FileReader(file);
                 CSVParser parser = new CSVParser(reader, CSVFormat.RFC4180.withFirstRecordAsHeader());
                 for (CSVRecord rec : parser) {
-                    SchematicIngredients si = new SchematicIngredients(rec.get("schematicID"), rec.get("ingredientName"));
+                    SchematicIngredients si = new SchematicIngredients();
                     //"schematicID","ingredientName","ingredientType","ingredientObject","ingredientQuantity","ingredientContribution"
+                    si.setSchematicID(rec.get("schematicID"));
+                    si.setIngredientName(rec.get("ingredientName"));
                     si.setIngredientType(new Short(rec.get("ingredientType")));
                     si.setIngredientObject(rec.get("ingredientObject"));
                     si.setIngredientQuantity(new Short(rec.get("ingredientQuantity")));
@@ -206,6 +215,83 @@ public class StaticDB {
                     ingredList.add(si);
                 }
                 bulkMerge(ingredList);
+            } catch (FileNotFoundException ex) {
+                Logger.getLogger(StaticDB.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (IOException ex) {
+                Logger.getLogger(StaticDB.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        
+        // Check ResourceGroup
+        Query resTypeGrpQ = em.createQuery("SELECT count(*) FROM ResourceGroup rg");
+        long resTypeGrpCount = (long) resTypeGrpQ.getSingleResult();
+        if (resTypeGrpCount != 99) {
+            dataOK = false;
+            ArrayList<ResourceGroup> resGrpList = new ArrayList<>();
+            try {
+                File file = new File(getClass().getClassLoader().getResource("resourcegroup.csv").getFile());
+                FileReader reader = new FileReader(file);
+                CSVParser parser = new CSVParser(reader, CSVFormat.RFC4180.withFirstRecordAsHeader());
+                for (CSVRecord rec : parser) {
+                    //"resourceGroup","groupName","groupLevel","groupOrder","containerType"
+                    ResourceGroup rg = new ResourceGroup(rec.get("resourceGroup"));
+                    rg.setGroupName(rec.get("groupName"));
+                    rg.setGroupLevel(new Short(rec.get("groupLevel")));
+                    rg.setGroupOrder(new Short(rec.get("groupOrder")));
+                    rg.setContainerType(rec.get("containerType"));
+                    resGrpList.add(rg);
+                }
+                bulkMerge(resGrpList);
+            } catch (FileNotFoundException ex) {
+                Logger.getLogger(StaticDB.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (IOException ex) {
+                Logger.getLogger(StaticDB.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        
+        // Check ResourceTypeGroup
+        Query resGrpTypeQ = em.createQuery("SELECT count(*) FROM ResourceTypeGroup rtg");
+        long resGrpTypeCount = (long) resGrpTypeQ.getSingleResult();
+        if (resGrpTypeCount != 5430) {
+            dataOK = false;
+            ArrayList<ResourceTypeGroup> resGrpTypeList = new ArrayList<>();
+            try {
+                File file = new File(getClass().getClassLoader().getResource("resourcetypegroup.csv").getFile());
+                FileReader reader = new FileReader(file);
+                CSVParser parser = new CSVParser(reader, CSVFormat.RFC4180.withFirstRecordAsHeader());
+                for (CSVRecord rec : parser) {
+                    //"typeGroupID","resourceType","resourceGroup"
+                    ResourceTypeGroup rtg = new ResourceTypeGroup();
+                    rtg.setResourceType(rec.get("resourceType"));
+                    rtg.setResourceGroup(rec.get("resourceGroup"));
+                    resGrpTypeList.add(rtg);
+                }
+                bulkMerge(resGrpTypeList);
+            } catch (FileNotFoundException ex) {
+                Logger.getLogger(StaticDB.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (IOException ex) {
+                Logger.getLogger(StaticDB.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        
+        // Check ObjectType
+        Query objTypeQ = em.createQuery("SELECT count(*) FROM ObjectType o");
+        long objTypeCount = (long) objTypeQ.getSingleResult();
+        if (objTypeCount != 98) {
+            dataOK = false;
+            ArrayList<ObjectType> objTypeList = new ArrayList<>();
+            try {
+                File file = new File(getClass().getClassLoader().getResource("objecttype.csv").getFile());
+                FileReader reader = new FileReader(file);
+                CSVParser parser = new CSVParser(reader, CSVFormat.RFC4180.withFirstRecordAsHeader());
+                for (CSVRecord rec : parser) {
+                    //"objectType","typeName","craftingTab"
+                    ObjectType o = new ObjectType(new Integer(rec.get("objectType")));
+                    o.setTypeName(rec.get("typeName"));
+                    o.setCraftingTab(new Integer(rec.get("craftingTab")));
+                    objTypeList.add(o);
+                }
+                bulkMerge(objTypeList);
             } catch (FileNotFoundException ex) {
                 Logger.getLogger(StaticDB.class.getName()).log(Level.SEVERE, null, ex);
             } catch (IOException ex) {
@@ -246,6 +332,19 @@ public class StaticDB {
         Query q = em.createNamedQuery("Schematic.findBySkillGroup");
         q.setParameter("skillGroup", skillGroup);
         List<Schematic> retVal = q.getResultList();
+        return retVal;
+    }
+    
+    public Schematic getSchematicByID(String ID) {
+        Query q = em.createNamedQuery("Schematic.findBySchematicID");
+        q.setParameter("schematicID", ID);
+        return (Schematic)q.getSingleResult();
+    }
+    
+    public List<SchematicIngredients> getIngredientsBySchematicID(String schematicID) {
+        Query q = em.createNamedQuery("SchematicIngredients.findBySchematicID");
+        q.setParameter("schematicID", schematicID);
+        List<SchematicIngredients> retVal = q.getResultList();
         return retVal;
     }
     

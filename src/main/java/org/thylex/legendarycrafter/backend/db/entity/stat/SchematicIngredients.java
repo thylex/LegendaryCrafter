@@ -6,9 +6,12 @@
 package org.thylex.legendarycrafter.backend.db.entity.stat;
 
 import java.io.Serializable;
+import javax.persistence.Basic;
 import javax.persistence.Column;
-import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
@@ -23,8 +26,9 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 @NamedQueries({
     @NamedQuery(name = "SchematicIngredients.findAll", query = "SELECT s FROM SchematicIngredients s"),
-    @NamedQuery(name = "SchematicIngredients.findBySchematicID", query = "SELECT s FROM SchematicIngredients s WHERE s.schematicIngredientsPK.schematicID = :schematicID"),
-    @NamedQuery(name = "SchematicIngredients.findByIngredientName", query = "SELECT s FROM SchematicIngredients s WHERE s.schematicIngredientsPK.ingredientName = :ingredientName"),
+    @NamedQuery(name = "SchematicIngredients.findByIngredientID", query = "SELECT s FROM SchematicIngredients s WHERE s.ingredientID = :ingredientID"),
+    @NamedQuery(name = "SchematicIngredients.findBySchematicID", query = "SELECT s FROM SchematicIngredients s WHERE s.schematicID = :schematicID"),
+    @NamedQuery(name = "SchematicIngredients.findByIngredientName", query = "SELECT s FROM SchematicIngredients s WHERE s.ingredientName = :ingredientName"),
     @NamedQuery(name = "SchematicIngredients.findByIngredientType", query = "SELECT s FROM SchematicIngredients s WHERE s.ingredientType = :ingredientType"),
     @NamedQuery(name = "SchematicIngredients.findByIngredientObject", query = "SELECT s FROM SchematicIngredients s WHERE s.ingredientObject = :ingredientObject"),
     @NamedQuery(name = "SchematicIngredients.findByIngredientQuantity", query = "SELECT s FROM SchematicIngredients s WHERE s.ingredientQuantity = :ingredientQuantity"),
@@ -32,8 +36,17 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class SchematicIngredients implements Serializable {
 
     private static final long serialVersionUID = 1L;
-    @EmbeddedId
-    protected SchematicIngredientsPK schematicIngredientsPK;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Basic(optional = false)
+    @Column(name = "ingredientID")
+    private Integer ingredientID;
+    @Basic(optional = false)
+    @Column(name = "schematicID")
+    private String schematicID;
+    @Basic(optional = false)
+    @Column(name = "ingredientName")
+    private String ingredientName;
     @Column(name = "ingredientType")
     private Short ingredientType;
     @Column(name = "ingredientObject")
@@ -46,20 +59,38 @@ public class SchematicIngredients implements Serializable {
     public SchematicIngredients() {
     }
 
-    public SchematicIngredients(SchematicIngredientsPK schematicIngredientsPK) {
-        this.schematicIngredientsPK = schematicIngredientsPK;
+    public SchematicIngredients(Integer ingredientID) {
+        this.ingredientID = ingredientID;
     }
 
-    public SchematicIngredients(String schematicID, String ingredientName) {
-        this.schematicIngredientsPK = new SchematicIngredientsPK(schematicID, ingredientName);
+    public SchematicIngredients(Integer ingredientID, String schematicID, String ingredientName) {
+        this.ingredientID = ingredientID;
+        this.schematicID = schematicID;
+        this.ingredientName = ingredientName;
     }
 
-    public SchematicIngredientsPK getSchematicIngredientsPK() {
-        return schematicIngredientsPK;
+    public Integer getIngredientID() {
+        return ingredientID;
     }
 
-    public void setSchematicIngredientsPK(SchematicIngredientsPK schematicIngredientsPK) {
-        this.schematicIngredientsPK = schematicIngredientsPK;
+    public void setIngredientID(Integer ingredientID) {
+        this.ingredientID = ingredientID;
+    }
+
+    public String getSchematicID() {
+        return schematicID;
+    }
+
+    public void setSchematicID(String schematicID) {
+        this.schematicID = schematicID;
+    }
+
+    public String getIngredientName() {
+        return ingredientName;
+    }
+
+    public void setIngredientName(String ingredientName) {
+        this.ingredientName = ingredientName;
     }
 
     public Short getIngredientType() {
@@ -97,7 +128,7 @@ public class SchematicIngredients implements Serializable {
     @Override
     public int hashCode() {
         int hash = 0;
-        hash += (schematicIngredientsPK != null ? schematicIngredientsPK.hashCode() : 0);
+        hash += (ingredientID != null ? ingredientID.hashCode() : 0);
         return hash;
     }
 
@@ -108,7 +139,7 @@ public class SchematicIngredients implements Serializable {
             return false;
         }
         SchematicIngredients other = (SchematicIngredients) object;
-        if ((this.schematicIngredientsPK == null && other.schematicIngredientsPK != null) || (this.schematicIngredientsPK != null && !this.schematicIngredientsPK.equals(other.schematicIngredientsPK))) {
+        if ((this.ingredientID == null && other.ingredientID != null) || (this.ingredientID != null && !this.ingredientID.equals(other.ingredientID))) {
             return false;
         }
         return true;
@@ -116,7 +147,7 @@ public class SchematicIngredients implements Serializable {
 
     @Override
     public String toString() {
-        return "org.thylex.legendarycrafter.backend.db.entity.stat.SchematicIngredients[ schematicIngredientsPK=" + schematicIngredientsPK + " ]";
+        return "org.thylex.legendarycrafter.backend.db.entity.stat.SchematicIngredients[ ingredientID=" + ingredientID + " ]";
     }
     
 }

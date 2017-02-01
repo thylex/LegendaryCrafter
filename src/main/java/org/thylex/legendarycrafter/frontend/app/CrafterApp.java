@@ -6,10 +6,13 @@
 package org.thylex.legendarycrafter.frontend.app;
 
 import java.io.File;
+import java.util.ArrayList;
 import org.thylex.legendarycrafter.backend.CrafterSettings;
 import org.thylex.legendarycrafter.backend.db.InventoryDB;
 import org.thylex.legendarycrafter.backend.db.StaticDB;
-import org.thylex.legendarycrafter.frontend.gui.CrafterGUI;
+import org.thylex.legendarycrafter.backend.db.entity.stat.Schematic;
+import org.thylex.legendarycrafter.frontend.gui.CalculationFrame;
+import org.thylex.legendarycrafter.frontend.gui.CrafterFrame;
 
 /**
  *
@@ -19,7 +22,8 @@ public class CrafterApp {
     private CrafterSettings settings = null;
     private StaticDB staticDB = null;
     private InventoryDB invDB = null;
-    private CrafterGUI gui = null;
+    private CrafterFrame gui = null;
+    private ArrayList<CalculationFrame> calcWindowList = new ArrayList<>();
     
     public CrafterApp() {
         String os = System.getProperty("os.name");
@@ -27,7 +31,7 @@ public class CrafterApp {
             System.out.println("Unsupported OS, exiting");
         }
         Initialize();
-        gui = new CrafterGUI(this);
+        gui = new CrafterFrame(this);
     }
     
     public void importFromGH() {
@@ -60,6 +64,9 @@ public class CrafterApp {
         staticDB.close();
         gui.setVisible(false);
         gui.dispose();
+        for (CalculationFrame calc : calcWindowList) {
+            calc.dispose();
+        }
     }
 
     public StaticDB getStaticDB() {
@@ -72,5 +79,9 @@ public class CrafterApp {
 
     public CrafterSettings getSettings() {
         return this.settings;
+    }
+    
+    public void newCalculationWindow(Schematic schematic) {
+        calcWindowList.add(new CalculationFrame(this, schematic));
     }
 }

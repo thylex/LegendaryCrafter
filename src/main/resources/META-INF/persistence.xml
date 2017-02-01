@@ -7,6 +7,10 @@
     <class>org.thylex.legendarycrafter.backend.db.entity.stat.Schematic</class>
     <class>org.thylex.legendarycrafter.backend.db.entity.stat.SchematicIngredients</class>
     <class>org.thylex.legendarycrafter.backend.db.entity.stat.SchematicQualities</class>
+    <class>org.thylex.legendarycrafter.backend.db.entity.stat.ResourceGroup</class>
+    <class>org.thylex.legendarycrafter.backend.db.entity.stat.ResourceTypeGroup</class>
+    <class>org.thylex.legendarycrafter.backend.db.entity.stat.SkillGroup</class>
+    <class>org.thylex.legendarycrafter.backend.db.entity.stat.ObjectType</class>
     <properties>
       <property name="javax.persistence.jdbc.url" value="jdbc:sqlite:swgstatic.db"/>
       <property name="javax.persistence.jdbc.user" value=""/>

@@ -5,10 +5,16 @@
  */
 package org.thylex.legendarycrafter.frontend.gui;
 
+import org.thylex.legendarycrafter.frontend.models.Item;
+import org.thylex.legendarycrafter.frontend.models.SchematicListModel;
+import org.thylex.legendarycrafter.frontend.models.InventoryTableModel;
 import java.awt.BorderLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.util.List;
+import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JList;
@@ -16,18 +22,20 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
+import javax.swing.ListSelectionModel;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.TableColumnModel;
 import org.thylex.legendarycrafter.backend.db.entity.inv.Resource;
-import org.thylex.legendarycrafter.backend.db.entity.stat.Profession;
+import org.thylex.legendarycrafter.backend.db.entity.stat.*;
 import org.thylex.legendarycrafter.frontend.app.CrafterApp;
 
 /**
  *
  * @author Henrik
  */
-public class CrafterGUI extends javax.swing.JFrame implements TableModelListener {
+public class CrafterFrame extends javax.swing.JFrame implements TableModelListener, ListSelectionListener {
 
     private CrafterApp app = null;
     private JTabbedPane tabPane = null;
@@ -36,18 +44,19 @@ public class CrafterGUI extends javax.swing.JFrame implements TableModelListener
     private JPanel schPanel = null;
     private JList schList = null;
     private String activeProf;
+    private JButton calcButton = null;
 
     /**
      * Creates new form CrafterGUI
      */
-    public CrafterGUI(CrafterApp app) {
+    public CrafterFrame(CrafterApp app) {
         this.app = app;
         initComponents();
         setTitle("Legendary Crafter");
 
         // Get properties
         activeProf = app.getSettings().getProp("SelectedProfession");
-        
+
         // Create base Tabbed Pane
         tabPane = new JTabbedPane(JTabbedPane.TOP);
 
@@ -95,13 +104,7 @@ public class CrafterGUI extends javax.swing.JFrame implements TableModelListener
             //System.out.println("Skill group count: " + prof.getSkillGroups().size());
         }
         if (activeProf != null) {
-            //TODO: pre-select the active profession
             profBox.getModel().setSelectedItem(activeProf);
-//            for (int i = 0; i < profBox.getModel().getSize(); i++) {
-//                if (activeProf.equals(profBox.getModel().getElementAt(i).toString())) {
-//                    profBox.getModel().setSelectedItem(profBox.getModel().getElementAt(i));
-//                }
-//            }
         }
         profBox.addActionListener(new java.awt.event.ActionListener() {
             @Override
@@ -113,36 +116,91 @@ public class CrafterGUI extends javax.swing.JFrame implements TableModelListener
         profLabel.setLabelFor(profBox);
 
         panel.add(profLabel, grid);
-        grid.gridx = 2;
-        grid.fill = GridBagConstraints.HORIZONTAL;
-        grid.gridwidth = 3;
+        grid.gridx = 1;
+        grid.gridwidth = 1;
         panel.add(profBox, grid);
 
         //Second row
+        grid.gridwidth = 2;
+        grid.fill = GridBagConstraints.BOTH;
         grid.gridy = 1;
         grid.gridx = 0;
         schList = new JList(new SchematicListModel(app, activeProf));
         schList.setLayoutOrientation(JList.VERTICAL);
         schList.setVisibleRowCount(10);
+        schList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        schList.addListSelectionListener(this);
 //        schList.setPreferredSize(new Dimension(300, 300));
         panel.add(new JScrollPane(schList), grid);
 
         //Third row
+        grid.gridwidth = 1;
+        grid.fill = GridBagConstraints.NONE;
         grid.gridy = 2;
         grid.gridx = 0;
-        panel.add(new JLabel("End1"), grid);
-        grid.gridx = 2;
-        panel.add(new JLabel("End2"), grid);
+        calcButton = new JButton("Calculate");
+        calcButton.setName("calcButton");
+        calcButton.addActionListener(new java.awt.event.ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                calcButtonAction(e);
+            }
+        });
+        calcButton.setEnabled(false);
+        panel.add(calcButton, grid);
+        grid.gridx = 1;
+        JButton exitButton = new JButton("Exit");
+        exitButton.addActionListener(new java.awt.event.ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                exitButtonAction(e);
+            }
+        });
+        panel.add(exitButton, grid);
         return panel;
     }
 
+    private void calcButtonAction(java.awt.event.ActionEvent e) {
+        Item sel = (Item) schList.getSelectedValue();
+        Schematic s = (Schematic) sel.getValue();
+        app.newCalculationWindow(s);
+    }
+
+    private void exitButtonAction(java.awt.event.ActionEvent e) {
+        app.close();
+    }
+
+    @Override
+    public void valueChanged(javax.swing.event.ListSelectionEvent e) {
+        JList list = (JList) e.getSource();
+        if (e.getValueIsAdjusting() != true) {
+            if (list.getSelectedValuesList().size() > 0) {
+                calcButton.setEnabled(true);
+                Item sel = (Item) list.getSelectedValue();
+                Schematic s = (Schematic) sel.getValue();
+                System.out.println("Schematic selected: " + s.getSchematicID());
+                List<SchematicIngredients> ingredList = s.getIngredients();
+                System.out.println("Number of ingredients: " + ingredList.size());
+                for (SchematicIngredients si : ingredList) {
+                    System.out.println("Ingredient: " + si.getIngredientName());
+                    System.out.println("Type: " + si.getIngredientType());
+                    System.out.println("Object: " + si.getIngredientObject());
+                    System.out.println("Quantity: " + si.getIngredientQuantity());
+                    System.out.println("Contribution: " + si.getIngredientContribution());
+                }
+            } else if (list.getSelectedValuesList().isEmpty()) {
+                calcButton.setEnabled(false);
+            }
+        }
+    }
+
     private void profBoxActionPerformed(java.awt.event.ActionEvent e) {
-        JComboBox box = (JComboBox)e.getSource();
+        JComboBox box = (JComboBox) e.getSource();
         activeProf = box.getSelectedItem().toString();
         app.getSettings().setProp("SelectedProfession", activeProf);
         refresh();
     }
-    
+
     @Override
     public void tableChanged(TableModelEvent e) {
         int col = e.getColumn();
@@ -270,14 +328,15 @@ public class CrafterGUI extends javax.swing.JFrame implements TableModelListener
                 }
             }
         } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(CrafterGUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(CrafterFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(CrafterGUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(CrafterFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(CrafterGUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(CrafterFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(CrafterGUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(CrafterFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
+        //</editor-fold>
         //</editor-fold>
 
         /* Create and display the form */

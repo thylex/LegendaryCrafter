@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.thylex.legendarycrafter.frontend.gui;
+package org.thylex.legendarycrafter.frontend.models;
 
 import java.util.List;
 import javax.swing.table.AbstractTableModel;
