@@ -74,7 +74,6 @@ public class CalculationFrame extends javax.swing.JFrame implements java.awt.eve
                 ResourceGroup rg = app.getStaticDB().getRescourceGroup(si.getIngredientObject());
                 panel.setRequiredText(rg.getGroupName());
                 panel.setAmountLabel(si.getIngredientQuantity().toString() + " x");
-                // TODO: Set combobocmodel of materials
                 List<ResourceGroup> rgList = app.getStaticDB().getResourceGroupByCategory(si.getIngredientObject());
                 ArrayList<ResourceType> rtList = new ArrayList<>();
                 for (ResourceGroup resGrp : rgList) {
@@ -93,47 +92,51 @@ public class CalculationFrame extends javax.swing.JFrame implements java.awt.eve
             }
             row++;
         }
-        
+
         gbc.gridy = 0;
         gbc.gridx = 1;
         gbc.gridheight = nrIngreds;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         this.getContentPane().add(setupGeneralInfoPanel(), gbc);
-        
+
         this.pack();
         this.validate();
         this.setVisible(true);
     }
-    
+
     private JPanel setupGeneralInfoPanel() {
         ObjectType ot = app.getStaticDB().getObjectType(schem.getObjectType());
         GridBagConstraints gbc = new GridBagConstraints();
         JPanel panel = new JPanel();
         panel.setLayout(new GridBagLayout());
         panel.setBorder(new TitledBorder("General info"));
-        
+
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.anchor = GridBagConstraints.WEST;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         panel.add(new JLabel(ot.getTypeName()), gbc);
-        
+
         gbc.gridy = 1;
         panel.add(new JLabel("Complexity: " + schem.getComplexity().toString()), gbc);
-        
+
         gbc.gridy = 2;
         panel.add(new JLabel("XP: " + schem.getXpAmount().toString()), gbc);
-        
+
         return panel;
     }
-    
+
     private ComboBoxModel setupMatBoxModel(List<ResourceType> rtList, SchematicIngredients si) {
         ArrayList<Resource> resList = new ArrayList<>();
+        ArrayList<String> typeDone = new ArrayList<>();
         DefaultComboBoxModel<Item> model = new DefaultComboBoxModel<>();
-        
+
         for (ResourceType rt : rtList) {
-            System.out.println("Getting resource of type: " + rt.getResourceTypeName());
-            resList.addAll(app.getInvDB().getResourceByType(rt.getResourceType()));
+            if (typeDone.contains(rt.getResourceType()) == false) {
+                typeDone.add(rt.getResourceType());
+                resList.addAll(app.getInvDB().getResourceByType(rt.getResourceType()));
+                System.out.println("Getting resource of type: " + rt.getResourceTypeName());
+            }
         }
         System.out.println("Total resources found: " + resList.size());
         for (Resource res : resList) {
@@ -145,7 +148,7 @@ public class CalculationFrame extends javax.swing.JFrame implements java.awt.eve
         }
         return model;
     }
-    
+
     private void materialBoxSelection(SchematicIngredients si, Resource res) {
         System.out.println("Material selected for: " + si.getIngredientName());
         System.out.println("Material chosen: " + res.getName());
