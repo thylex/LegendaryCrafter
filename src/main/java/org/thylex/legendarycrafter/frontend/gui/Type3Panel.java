@@ -35,6 +35,7 @@ public class Type3Panel extends javax.swing.JPanel {
         jTextField1 = new javax.swing.JTextField();
 
         setBorder(javax.swing.BorderFactory.createTitledBorder("Type 3"));
+        setMinimumSize(new java.awt.Dimension(260, 65));
         setPreferredSize(new java.awt.Dimension(260, 65));
 
         jLabel1.setText("Requires:");
@@ -52,8 +53,8 @@ public class Type3Panel extends javax.swing.JPanel {
                 .addContainerGap()
                 .addComponent(jLabel1)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jTextField1, javax.swing.GroupLayout.DEFAULT_SIZE, 46, Short.MAX_VALUE)
-                .addContainerGap(136, Short.MAX_VALUE))
+                .addComponent(jTextField1, javax.swing.GroupLayout.DEFAULT_SIZE, 172, Short.MAX_VALUE)
+                .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)

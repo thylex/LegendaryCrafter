@@ -93,11 +93,12 @@ public class CrafterFrame extends javax.swing.JFrame implements TableModelListen
     private JPanel setupSchematicsPanel(JPanel panel) {
         panel.setLayout(new GridBagLayout());
         GridBagConstraints grid = new GridBagConstraints();
-        grid.fill = GridBagConstraints.VERTICAL;
+        grid.fill = GridBagConstraints.HORIZONTAL;
 
         //First row
         grid.gridy = 0;
         grid.gridx = 0;
+        grid.anchor = GridBagConstraints.NORTHWEST;
         JComboBox profBox = new JComboBox();
         for (Profession prof : app.getStaticDB().getAllProfessions()) {
             profBox.addItem(prof.getProfName());
@@ -117,25 +118,26 @@ public class CrafterFrame extends javax.swing.JFrame implements TableModelListen
 
         panel.add(profLabel, grid);
         grid.gridx = 1;
-        grid.gridwidth = 1;
+        grid.fill = GridBagConstraints.NONE;
         panel.add(profBox, grid);
 
         //Second row
         grid.gridwidth = 2;
+        grid.anchor = GridBagConstraints.WEST;
         grid.fill = GridBagConstraints.BOTH;
         grid.gridy = 1;
         grid.gridx = 0;
         schList = new JList(new SchematicListModel(app, activeProf));
         schList.setLayoutOrientation(JList.VERTICAL);
-        schList.setVisibleRowCount(10);
+        schList.setVisibleRowCount(20);
         schList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         schList.addListSelectionListener(this);
-//        schList.setPreferredSize(new Dimension(300, 300));
         panel.add(new JScrollPane(schList), grid);
 
         //Third row
         grid.gridwidth = 1;
         grid.fill = GridBagConstraints.NONE;
+        grid.anchor = GridBagConstraints.SOUTHWEST;
         grid.gridy = 2;
         grid.gridx = 0;
         calcButton = new JButton("Calculate");
@@ -149,6 +151,7 @@ public class CrafterFrame extends javax.swing.JFrame implements TableModelListen
         calcButton.setEnabled(false);
         panel.add(calcButton, grid);
         grid.gridx = 1;
+        grid.anchor = GridBagConstraints.SOUTHEAST;
         JButton exitButton = new JButton("Exit");
         exitButton.addActionListener(new java.awt.event.ActionListener() {
             @Override

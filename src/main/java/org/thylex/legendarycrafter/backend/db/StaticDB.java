@@ -10,10 +10,8 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.persistence.EntityManager;
@@ -23,14 +21,7 @@ import javax.persistence.Query;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
-import org.thylex.legendarycrafter.backend.db.entity.stat.ObjectType;
-import org.thylex.legendarycrafter.backend.db.entity.stat.Profession;
-import org.thylex.legendarycrafter.backend.db.entity.stat.ResourceGroup;
-import org.thylex.legendarycrafter.backend.db.entity.stat.ResourceType;
-import org.thylex.legendarycrafter.backend.db.entity.stat.ResourceTypeGroup;
-import org.thylex.legendarycrafter.backend.db.entity.stat.Schematic;
-import org.thylex.legendarycrafter.backend.db.entity.stat.SchematicIngredients;
-import org.thylex.legendarycrafter.backend.db.entity.stat.SkillGroup;
+import org.thylex.legendarycrafter.backend.db.entity.stat.*;
 import org.thylex.legendarycrafter.frontend.app.CrafterApp;
 
 /**
@@ -50,9 +41,123 @@ public class StaticDB {
         checkData();
     }
 
+    public List<ResourceGroup> getResourceGroupByCategory(String category) {
+        // q1.size = 0 => end-type rg
+        // q1.size > o => category rg
+        ArrayList<ResourceGroup> rgList = new ArrayList<>();
+        Query q1 = em.createNamedQuery("ResourceGroupCategory.findByResourceCategory");
+        q1.setParameter("resourceCategory", category);
+        List<ResourceGroupCategory> rgcList = q1.getResultList();
+        System.out.println("Listlength for " + category + " is: " + rgcList.size());
+        if (rgcList.size() > 0) {
+            System.out.println(category + " is not a end-type, translating by resursive call");
+            for (ResourceGroupCategory rgc : rgcList) {
+                rgList.addAll(getResourceGroupByCategory(rgc.getResourceGroup()));
+            }
+        }
+        if (rgcList.size() == 0) {
+            System.out.println(category + " is an end-type, getting object and returning");
+            rgList.add(getRescourceGroup(category));
+        }
+        System.out.println("RGC translatation return size: " + rgList.size());
+        return rgList;
+    }
+
+    public ObjectType getObjectType(Integer objecttype) {
+        Query q = em.createNamedQuery("ObjectType.findByObjectType");
+        q.setParameter("objectType", objecttype);
+        return (ObjectType) q.getSingleResult();
+    }
+
+    public ResourceGroup getRescourceGroup(String group) {
+        Query q = em.createNamedQuery("ResourceGroup.findByResourceGroup");
+        q.setParameter("resourceGroup", group);
+        return (ResourceGroup) q.getSingleResult();
+    }
+
+    public ResourceType getResourceTypeByName(String name) {
+        Query q = em.createNamedQuery("ResourceType.findByResourceTypeName");
+        q.setParameter("resourceTypeName", name);
+        if (q.getResultList().isEmpty()) {
+            return null;
+        } else {
+            return (ResourceType) q.getSingleResult();
+        }
+    }
+    
+    public List<ResourceType> getResourceTypeByGroup(String group) {
+        Query q = em.createNamedQuery("ResourceTypeGroup.findByResourceGroup");
+        q.setParameter("resourceGroup", group);
+        List<ResourceTypeGroup> rtgList = q.getResultList();
+        
+        ArrayList<ResourceType> rtList = new ArrayList<>();
+        for (ResourceTypeGroup rtg : rtgList) {
+            Query q1 = em.createNamedQuery("ResourceType.findByResourceType");
+            q1.setParameter("resourceType", rtg.getResourceType());
+            rtList.addAll(q1.getResultList());
+        }
+        return rtList;
+    }
+
+    public List<Profession> getAllProfessions() {
+        Query q = em.createNamedQuery("Profession.findAll");
+        return q.getResultList();
+    }
+
+    public Profession getProfessionByName(String name) {
+        Profession p;
+        Query q = em.createNamedQuery("Profession.findByProfName");
+        q.setParameter("profName", name);
+        p = (Profession) q.getSingleResult();
+        return p;
+    }
+
+    public List<Schematic> getSchematicByGroupName(String skillGroup) {
+        Query q = em.createNamedQuery("Schematic.findBySkillGroup");
+        q.setParameter("skillGroup", skillGroup);
+        List<Schematic> retVal = q.getResultList();
+        return retVal;
+    }
+
+    public Schematic getSchematicByID(String ID) {
+        Query q = em.createNamedQuery("Schematic.findBySchematicID");
+        q.setParameter("schematicID", ID);
+        return (Schematic) q.getSingleResult();
+    }
+
+    public List<SchematicIngredients> getIngredientsBySchematicID(String schematicID) {
+        Query q = em.createNamedQuery("SchematicIngredients.findBySchematicID");
+        q.setParameter("schematicID", schematicID);
+        List<SchematicIngredients> retVal = q.getResultList();
+        return retVal;
+    }
+
+    public void bulkMerge(ArrayList list) {
+        em.getTransaction().begin();
+        Iterator iter = list.iterator();
+        while (iter.hasNext()) {
+            em.merge(iter.next());
+        }
+        em.getTransaction().commit();
+    }
+
+    private void open() {
+        emf = Persistence.createEntityManagerFactory("swgDB");
+        em = emf.createEntityManager();
+    }
+
+    public void close() {
+        if (em != null) {
+            em.close();
+        }
+        if (emf != null) {
+            emf.close();
+        }
+    }
+
     private void checkData() {
         Boolean dataOK = true;
-        
+
         //Check Professions
         Query profQ = em.createQuery("SELECT count(*) FROM Profession p");
         long profCount = (long) profQ.getSingleResult();
@@ -78,7 +183,7 @@ public class StaticDB {
                 Logger.getLogger(StaticDB.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-        
+
         //Check Skillgroup
         Query skillgroupQ = em.createQuery("SELECT count(*) FROM ResourceType rt");
         long skillgroupCount = (long) skillgroupQ.getSingleResult();
@@ -103,7 +208,7 @@ public class StaticDB {
                 Logger.getLogger(StaticDB.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-        
+
         //Check ResourceType
         Query resTypeQ = em.createQuery("SELECT count(*) FROM ResourceType rt");
         long resTypeCount = (long) resTypeQ.getSingleResult();
@@ -159,7 +264,7 @@ public class StaticDB {
                 Logger.getLogger(StaticDB.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-        
+
         //Check Schematic
         Query schemQ = em.createQuery("SELECT count(*) FROM Schematic s");
         long schemCount = (long) schemQ.getSingleResult();
@@ -192,7 +297,7 @@ public class StaticDB {
                 Logger.getLogger(StaticDB.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-        
+
         //Check SchematicIngredients
         Query schemIngredQ = em.createQuery("SELECT count(*) FROM SchematicIngredients si");
         long schemIngredCount = (long) schemIngredQ.getSingleResult();
@@ -221,7 +326,7 @@ public class StaticDB {
                 Logger.getLogger(StaticDB.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-        
+
         // Check ResourceGroup
         Query resTypeGrpQ = em.createQuery("SELECT count(*) FROM ResourceGroup rg");
         long resTypeGrpCount = (long) resTypeGrpQ.getSingleResult();
@@ -248,7 +353,7 @@ public class StaticDB {
                 Logger.getLogger(StaticDB.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-        
+
         // Check ResourceTypeGroup
         Query resGrpTypeQ = em.createQuery("SELECT count(*) FROM ResourceTypeGroup rtg");
         long resGrpTypeCount = (long) resGrpTypeQ.getSingleResult();
@@ -273,7 +378,7 @@ public class StaticDB {
                 Logger.getLogger(StaticDB.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-        
+
         // Check ObjectType
         Query objTypeQ = em.createQuery("SELECT count(*) FROM ObjectType o");
         long objTypeCount = (long) objTypeQ.getSingleResult();
@@ -298,77 +403,35 @@ public class StaticDB {
                 Logger.getLogger(StaticDB.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-        
+
+        //Check ResourceGroupCategory
+        Query resGrpCatQ = em.createQuery("SELECT count(*) FROM ResourceGroupCategory rgc");
+        long resGrpCatCount = (long) resGrpCatQ.getSingleResult();
+        if (resGrpCatCount != 330) {
+            dataOK = false;
+            ArrayList<ResourceGroupCategory> resGrpCatList = new ArrayList<>();
+            try {
+                File file = new File(getClass().getClassLoader().getResource("resourcegroupcategory.csv").getFile());
+                FileReader reader = new FileReader(file);
+                CSVParser parser = new CSVParser(reader, CSVFormat.RFC4180.withFirstRecordAsHeader());
+                for (CSVRecord rec : parser) {
+                    //"ID","resourceGroup","resourceCategory"
+                    ResourceGroupCategory rgc = new ResourceGroupCategory();
+                    rgc.setResourceGroup(rec.get("resourceGroup"));
+                    rgc.setResourceCategory(rec.get("resourceCategory"));
+                    resGrpCatList.add(rgc);
+                }
+                bulkMerge(resGrpCatList);
+            } catch (FileNotFoundException ex) {
+                Logger.getLogger(StaticDB.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (IOException ex) {
+                Logger.getLogger(StaticDB.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+
         if (dataOK == false) {
             close();
             open();
         }
     }
-
-    public ResourceType getResourceTypeByName(String name) {
-        Query q = em.createNamedQuery("ResourceType.findByResourceTypeName");
-        q.setParameter("resourceTypeName", name);
-        if (q.getResultList().isEmpty()) {
-            return null;
-        } else {
-            return (ResourceType) q.getSingleResult();
-        }
-    }
-
-    public List<Profession> getAllProfessions() {
-        Query q = em.createNamedQuery("Profession.findAll");
-        return q.getResultList();
-    }
-
-    public Profession getProfessionByName(String name) {
-        Profession p;
-        Query q = em.createNamedQuery("Profession.findByProfName");
-        q.setParameter("profName", name);
-        p = (Profession) q.getSingleResult();
-        return p;
-    }
-
-    public List<Schematic> getSchematicByGroupName(String skillGroup) {
-        Query q = em.createNamedQuery("Schematic.findBySkillGroup");
-        q.setParameter("skillGroup", skillGroup);
-        List<Schematic> retVal = q.getResultList();
-        return retVal;
-    }
-    
-    public Schematic getSchematicByID(String ID) {
-        Query q = em.createNamedQuery("Schematic.findBySchematicID");
-        q.setParameter("schematicID", ID);
-        return (Schematic)q.getSingleResult();
-    }
-    
-    public List<SchematicIngredients> getIngredientsBySchematicID(String schematicID) {
-        Query q = em.createNamedQuery("SchematicIngredients.findBySchematicID");
-        q.setParameter("schematicID", schematicID);
-        List<SchematicIngredients> retVal = q.getResultList();
-        return retVal;
-    }
-    
-    public void bulkMerge(ArrayList list) {
-        em.getTransaction().begin();
-        Iterator iter = list.iterator();
-        while(iter.hasNext()) {
-            em.merge(iter.next());
-        }
-        em.getTransaction().commit();
-    }
-    private void open() {
-        emf = Persistence.createEntityManagerFactory("swgDB");
-        em = emf.createEntityManager();
-    }
-
-    
-    public void close() {
-        if (em != null) {
-            em.close();
-        }
-        if (emf != null) {
-            emf.close();
-        }
-    }
-
 }

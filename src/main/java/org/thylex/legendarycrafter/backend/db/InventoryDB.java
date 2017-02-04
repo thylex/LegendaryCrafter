@@ -9,6 +9,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -52,6 +53,14 @@ public class InventoryDB {
             System.out.println("ERROR: Didn't find just 1 entry, maxResults is: " + q.getMaxResults());
             return null;
         }
+    }
+    
+    public List<Resource> getResourceByType(String type) {
+        ArrayList<Resource> resList = new ArrayList<>();
+        Query q = em.createQuery("SELECT r FROM Resource r WHERE r.resourceType=:resourceType");
+        q.setParameter("resourceType", type);
+        resList.addAll(q.getResultList());
+        return resList;
     }
     
     public void importFromGH() {

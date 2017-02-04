@@ -6,87 +6,161 @@
 package org.thylex.legendarycrafter.frontend.gui;
 
 import java.awt.BorderLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
 import java.util.ArrayList;
+import java.util.List;
+import javax.swing.ComboBoxModel;
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.Border;
 import javax.swing.border.TitledBorder;
+import org.thylex.legendarycrafter.backend.db.entity.inv.Resource;
+import org.thylex.legendarycrafter.backend.db.entity.stat.ObjectType;
+import org.thylex.legendarycrafter.backend.db.entity.stat.ResourceGroup;
+import org.thylex.legendarycrafter.backend.db.entity.stat.ResourceType;
 import org.thylex.legendarycrafter.backend.db.entity.stat.Schematic;
 import org.thylex.legendarycrafter.backend.db.entity.stat.SchematicIngredients;
 import org.thylex.legendarycrafter.frontend.app.CrafterApp;
+import org.thylex.legendarycrafter.frontend.models.Item;
 
 /**
  *
  * @author Henrik
  */
-public class CalculationFrame extends javax.swing.JFrame {
+public class CalculationFrame extends javax.swing.JFrame implements java.awt.event.ActionListener {
 
     private CrafterApp app;
     private Schematic schem;
     private ArrayList<Type0Panel> type0List = new ArrayList<>();
-    
+
     /**
      * Creates new form CalculationGUI
      */
     public CalculationFrame() {
         initComponents();
     }
-    
+
     public CalculationFrame(CrafterApp app, Schematic schematic) {
         initComponents();
         this.app = app;
         this.schem = schematic;
-        
+
         prepareLayout();
-        
+
     }
-    
+
     private void prepareLayout() {
         this.setTitle(schem.getSchematicName());
+        this.getContentPane().setLayout(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        int nrIngreds = schem.getIngredients().size();
+        int row = 0;
+        gbc.gridx = 0;
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
         for (SchematicIngredients si : schem.getIngredients()) {
             System.out.println("Adding: " + si.getIngredientName());
-            int nrIngreds = schem.getIngredients().size();
-            this.getContentPane().setLayout(new GridLayout(nrIngreds, 1));
+            gbc.gridy = row;
             if (si.getIngredientType() == 0) {
                 Type0Panel panel = new Type0Panel();
                 panel.setBorder(new TitledBorder(si.getIngredientName().replace("_", " ")));
-                // TODO: expand this using resourceGroup
-                panel.setRequiredText(si.getIngredientObject());
+                ResourceGroup rg = app.getStaticDB().getRescourceGroup(si.getIngredientObject());
+                panel.setRequiredText(rg.getGroupName());
                 panel.setAmountLabel(si.getIngredientQuantity().toString() + " x");
                 // TODO: Set combobocmodel of materials
-                this.getContentPane().add(panel, BorderLayout.CENTER);
+                List<ResourceGroup> rgList = app.getStaticDB().getResourceGroupByCategory(si.getIngredientObject());
+                ArrayList<ResourceType> rtList = new ArrayList<>();
+                for (ResourceGroup resGrp : rgList) {
+                    rtList.addAll(app.getStaticDB().getResourceTypeByGroup(resGrp.getResourceGroup()));
+                }
+                panel.setMaterialBoxActionListener(this);
+                panel.setMaterialBoxModel(setupMatBoxModel(rtList, si));
+                this.getContentPane().add(panel, gbc);
                 type0List.add(panel);
             }
             if (si.getIngredientType() == 3) {
                 Type3Panel panel = new Type3Panel();
-                panel.setBorder(new TitledBorder("Sub component"));
+                panel.setBorder(new TitledBorder("sub component"));
                 panel.setRequiredText(si.getIngredientName().replace("_", " "));
-                this.getContentPane().add(panel, BorderLayout.CENTER);
+                this.getContentPane().add(panel, gbc);
             }
-            //this.getContentPane().add(addIngredient(new JPanel(), si), BorderLayout.CENTER);
+            row++;
         }
+        
+        gbc.gridy = 0;
+        gbc.gridx = 1;
+        gbc.gridheight = nrIngreds;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        this.getContentPane().add(setupGeneralInfoPanel(), gbc);
+        
+        this.pack();
         this.validate();
         this.setVisible(true);
     }
     
-    private JPanel addIngredient(JPanel panel, SchematicIngredients si) {
-        panel.setBorder(new TitledBorder(si.getIngredientName().replace("_", " ")));
+    private JPanel setupGeneralInfoPanel() {
+        ObjectType ot = app.getStaticDB().getObjectType(schem.getObjectType());
+        GridBagConstraints gbc = new GridBagConstraints();
+        JPanel panel = new JPanel();
+        panel.setLayout(new GridBagLayout());
+        panel.setBorder(new TitledBorder("General info"));
         
-        JLabel contrLabel = new JLabel("Contribution");
-        JTextField contrText = new JTextField(si.getIngredientContribution().toString());
-        contrLabel.setLabelFor(contrText);
-        panel.add(contrLabel);
-        panel.add(contrText);
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        panel.add(new JLabel(ot.getTypeName()), gbc);
         
-        JLabel typeLabel = new JLabel("Type");
-        JTextField typeText = new JTextField(si.getIngredientType().toString());
-        typeLabel.setLabelFor(typeText);
-        panel.add(typeLabel);
-        panel.add(typeText);
+        gbc.gridy = 1;
+        panel.add(new JLabel("Complexity: " + schem.getComplexity().toString()), gbc);
+        
+        gbc.gridy = 2;
+        panel.add(new JLabel("XP: " + schem.getXpAmount().toString()), gbc);
         
         return panel;
+    }
+    
+    private ComboBoxModel setupMatBoxModel(List<ResourceType> rtList, SchematicIngredients si) {
+        ArrayList<Resource> resList = new ArrayList<>();
+        DefaultComboBoxModel<Item> model = new DefaultComboBoxModel<>();
+        
+        for (ResourceType rt : rtList) {
+            System.out.println("Getting resource of type: " + rt.getResourceTypeName());
+            resList.addAll(app.getInvDB().getResourceByType(rt.getResourceType()));
+        }
+        System.out.println("Total resources found: " + resList.size());
+        for (Resource res : resList) {
+            ArrayList itemList = new ArrayList();
+            itemList.add(si);
+            itemList.add(res);
+            Item item = new Item(itemList, res.getName());
+            model.addElement(item);
+        }
+        return model;
+    }
+    
+    private void materialBoxSelection(SchematicIngredients si, Resource res) {
+        System.out.println("Material selected for: " + si.getIngredientName());
+        System.out.println("Material chosen: " + res.getName());
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        if (e.getSource().getClass() == JComboBox.class) {
+            JComboBox box = (JComboBox) e.getSource();
+            Item sel = (Item) box.getSelectedItem();
+            List val = (List) sel.getValue();
+            SchematicIngredients si = (SchematicIngredients) val.get(0);
+            Resource res = (Resource) val.get(1);
+            materialBoxSelection(si, res);
+        }
     }
 
     /**
