@@ -68,6 +68,9 @@ public class Schematic implements Serializable {
     @OneToMany(mappedBy="schematicID", fetch = FetchType.LAZY)
     @Basic(optional = true)
     private List<SchematicIngredients> Ingredients;
+    @OneToMany(mappedBy = "schematicID", fetch = FetchType.LAZY)
+    @Basic(optional = true)
+    private List<SchematicQualities> schematicQualities;
 
     public Schematic() {
     }
@@ -90,6 +93,14 @@ public class Schematic implements Serializable {
 
     public void setIngredients(List<SchematicIngredients> Ingredients) {
         this.Ingredients = Ingredients;
+    }
+
+    public List<SchematicQualities> getSchematicQualities() {
+        return schematicQualities;
+    }
+
+    public void setSchematicQualities(List<SchematicQualities> schematicQualities) {
+        this.schematicQualities = schematicQualities;
     }
 
     public String getSchematicName() {

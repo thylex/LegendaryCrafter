@@ -428,6 +428,32 @@ public class StaticDB {
                 Logger.getLogger(StaticDB.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
+        
+        // Check SchematicResWeights
+        Query schemResWeightQ = em.createQuery("SELECT count(*) FROM SchematicResWeights srw");
+        long schemResWeightCount = (long) schemResWeightQ.getSingleResult();
+        if (schemResWeightCount != 8972) {
+            dataOK = false;
+            ArrayList<SchematicResWeights> schemResWeightList = new ArrayList<>();
+            try {
+                File file = new File(getClass().getClassLoader().getResource("schematicresweights.csv").getFile());
+                FileReader reader = new FileReader(file);
+                CSVParser parser = new CSVParser(reader, CSVFormat.RFC4180.withFirstRecordAsHeader());
+                for (CSVRecord rec : parser) {
+                    //"expQualityID","statName","statWeight"
+                    SchematicResWeights srw = new SchematicResWeights();
+                    srw.setExpQualityID(new Integer(rec.get("expQualityID")));
+                    srw.setStatName(rec.get("statName"));
+                    srw.setStatWeight(new Short(rec.get("statWeight")));
+                    schemResWeightList.add(srw);
+                }
+                bulkMerge(schemResWeightList);
+            } catch (FileNotFoundException ex) {
+                Logger.getLogger(StaticDB.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (IOException ex) {
+                Logger.getLogger(StaticDB.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
 
         if (dataOK == false) {
             close();

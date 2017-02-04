@@ -6,14 +6,17 @@
 package org.thylex.legendarycrafter.backend.db.entity.stat;
 
 import java.io.Serializable;
+import java.util.List;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -47,6 +50,9 @@ public class SchematicQualities implements Serializable {
     private String expGroup;
     @Column(name = "weightTotal")
     private Short weightTotal;
+    @OneToMany(mappedBy = "expQualityID", fetch = FetchType.LAZY)
+    @Basic(optional = true)
+    private List<SchematicResWeights> resWeights;
 
     public SchematicQualities() {
     }
@@ -61,6 +67,14 @@ public class SchematicQualities implements Serializable {
 
     public void setExpQualityID(Integer expQualityID) {
         this.expQualityID = expQualityID;
+    }
+
+    public List<SchematicResWeights> getResWeights() {
+        return resWeights;
+    }
+
+    public void setResWeights(List<SchematicResWeights> resWeights) {
+        this.resWeights = resWeights;
     }
 
     public String getSchematicID() {

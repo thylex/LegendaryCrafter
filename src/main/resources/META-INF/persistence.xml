@@ -12,6 +12,7 @@
     <class>org.thylex.legendarycrafter.backend.db.entity.stat.SkillGroup</class>
     <class>org.thylex.legendarycrafter.backend.db.entity.stat.ObjectType</class>
     <class>org.thylex.legendarycrafter.backend.db.entity.stat.ResourceGroupCategory</class>
+    <class>org.thylex.legendarycrafter.backend.db.entity.stat.SchematicResWeights</class>
     <properties>
       <property name="javax.persistence.jdbc.url" value="jdbc:sqlite:swgstatic.db"/>
       <property name="javax.persistence.jdbc.user" value=""/>
