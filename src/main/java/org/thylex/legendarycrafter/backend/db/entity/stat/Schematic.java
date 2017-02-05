@@ -8,6 +8,7 @@ package org.thylex.legendarycrafter.backend.db.entity.stat;
 import java.io.Serializable;
 import java.util.List;
 import javax.persistence.Basic;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -17,6 +18,8 @@ import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlRootElement;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 
 /**
  *
@@ -65,11 +68,10 @@ public class Schematic implements Serializable {
     private String objectPath;
     @Column(name = "objectGroup")
     private String objectGroup;
-    @OneToMany(mappedBy="schematicID", fetch = FetchType.LAZY)
-    @Basic(optional = true)
+    @OneToMany(mappedBy="schematic", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<SchematicIngredients> Ingredients;
-    @OneToMany(mappedBy = "schematicID", fetch = FetchType.LAZY)
-    @Basic(optional = true)
+    @OneToMany(mappedBy="schematicID", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @Fetch(FetchMode.JOIN)
     private List<SchematicQualities> schematicQualities;
 
     public Schematic() {

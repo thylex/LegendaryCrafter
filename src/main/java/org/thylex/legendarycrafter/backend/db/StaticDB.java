@@ -48,18 +48,18 @@ public class StaticDB {
         Query q1 = em.createNamedQuery("ResourceGroupCategory.findByResourceCategory");
         q1.setParameter("resourceCategory", category);
         List<ResourceGroupCategory> rgcList = q1.getResultList();
-        System.out.println("Listlength for " + category + " is: " + rgcList.size());
+//        System.out.println("Listlength for " + category + " is: " + rgcList.size());
         if (rgcList.size() > 0) {
-            System.out.println(category + " is not a end-type, translating by resursive call");
+//            System.out.println(category + " is not a end-type, translating by resursive call");
             for (ResourceGroupCategory rgc : rgcList) {
                 rgList.addAll(getResourceGroupByCategory(rgc.getResourceGroup()));
             }
         }
-        if (rgcList.size() == 0) {
-            System.out.println(category + " is an end-type, getting object and returning");
+        if (rgcList.isEmpty()) {
+//            System.out.println(category + " is an end-type, getting object and returning");
             rgList.add(getRescourceGroup(category));
         }
-        System.out.println("RGC translatation return size: " + rgList.size());
+//        System.out.println("RGC translatation return size: " + rgList.size());
         return rgList;
     }
 
@@ -130,6 +130,12 @@ public class StaticDB {
         q.setParameter("schematicID", schematicID);
         List<SchematicIngredients> retVal = q.getResultList();
         return retVal;
+    }
+    
+    public List<SchematicQualities> getSchematicQualitiesBySchematicID(String schematicID) {
+        Query q = em.createNamedQuery("SchematicQualities.findBySchematicID");
+        q.setParameter("schematicID", schematicID);
+        return q.getResultList();
     }
 
     public void bulkMerge(ArrayList list) {
@@ -448,6 +454,33 @@ public class StaticDB {
                     schemResWeightList.add(srw);
                 }
                 bulkMerge(schemResWeightList);
+            } catch (FileNotFoundException ex) {
+                Logger.getLogger(StaticDB.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (IOException ex) {
+                Logger.getLogger(StaticDB.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        
+        // Check SchematicQualities
+        Query schemQualQ = em.createQuery("SELECT count(*) FROM SchematicQualities sq");
+        long schemQualCount = (long) schemQualQ.getSingleResult();
+        if (schemQualCount != 13348) {
+            dataOK = false;
+            ArrayList<SchematicQualities> schemQualList = new ArrayList<>();
+            try {
+                File file = new File(getClass().getClassLoader().getResource("schematicqualities.csv").getFile());
+                FileReader reader = new FileReader(file);
+                CSVParser parser = new CSVParser(reader, CSVFormat.RFC4180.withFirstRecordAsHeader());
+                for (CSVRecord rec : parser) {
+                    //"expQualityID","schematicID","expProperty","expGroup","weightTotal"
+                    SchematicQualities sq = new SchematicQualities(new Integer(rec.get("expQualityID")));
+                    sq.setSchematicID(rec.get("schematicID"));
+                    sq.setExpProperty(rec.get("expProperty"));
+                    sq.setExpGroup(rec.get("expGroup"));
+                    sq.setWeightTotal(new Short(rec.get("weightTotal")));
+                    schemQualList.add(sq);
+                }
+                bulkMerge(schemQualList);
             } catch (FileNotFoundException ex) {
                 Logger.getLogger(StaticDB.class.getName()).log(Level.SEVERE, null, ex);
             } catch (IOException ex) {

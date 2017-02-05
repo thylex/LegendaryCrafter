@@ -9,9 +9,13 @@ import java.io.Serializable;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
@@ -55,6 +59,9 @@ public class SchematicIngredients implements Serializable {
     private Short ingredientQuantity;
     @Column(name = "ingredientContribution")
     private Short ingredientContribution;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "schematicID", insertable = false, updatable = false)
+    private Schematic schematic;
 
     public SchematicIngredients() {
     }
@@ -83,6 +90,14 @@ public class SchematicIngredients implements Serializable {
 
     public void setSchematicID(String schematicID) {
         this.schematicID = schematicID;
+    }
+
+    public Schematic getSchematic() {
+        return schematic;
+    }
+
+    public void setSchematic(Schematic schematic) {
+        this.schematic = schematic;
     }
 
     public String getIngredientName() {

@@ -10,6 +10,7 @@ import java.util.List;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -43,7 +44,7 @@ public class Profession implements Serializable {
     private String profName;
     @Column(name = "craftingQuality")
     private Short craftingQuality;
-    @OneToMany(mappedBy="profID")
+    @OneToMany(mappedBy="profID", fetch = FetchType.LAZY)
     private List<SkillGroup> skillGroups;
 
     public Profession() {

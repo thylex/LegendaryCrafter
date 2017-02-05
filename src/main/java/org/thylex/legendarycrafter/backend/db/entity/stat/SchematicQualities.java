@@ -14,6 +14,8 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
@@ -50,8 +52,10 @@ public class SchematicQualities implements Serializable {
     private String expGroup;
     @Column(name = "weightTotal")
     private Short weightTotal;
+//    @ManyToOne(fetch = FetchType.LAZY)
+//    @JoinColumn(name = "schematicID", insertable = false, updatable = false)
+//    private Schematic schematic;
     @OneToMany(mappedBy = "expQualityID", fetch = FetchType.LAZY)
-    @Basic(optional = true)
     private List<SchematicResWeights> resWeights;
 
     public SchematicQualities() {
@@ -84,6 +88,14 @@ public class SchematicQualities implements Serializable {
     public void setSchematicID(String schematicID) {
         this.schematicID = schematicID;
     }
+
+//    public Schematic getSchematic() {
+//        return schematic;
+//    }
+//
+//    public void setSchematic(Schematic schematic) {
+//        this.schematic = schematic;
+//    }
 
     public String getExpProperty() {
         return expProperty;
