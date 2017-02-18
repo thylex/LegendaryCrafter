@@ -101,7 +101,7 @@ public class CrafterFrame extends javax.swing.JFrame implements TableModelListen
         grid.anchor = GridBagConstraints.NORTHWEST;
         JComboBox profBox = new JComboBox();
         for (Profession prof : app.getStaticDB().getAllProfessions()) {
-            profBox.addItem(prof.getProfName());
+            profBox.addItem(new Item(prof, prof.getProfName()));
             //System.out.println("Skill group count: " + prof.getSkillGroups().size());
         }
         if (activeProf != null) {
@@ -124,7 +124,7 @@ public class CrafterFrame extends javax.swing.JFrame implements TableModelListen
         //Second row
         grid.gridwidth = 2;
         grid.anchor = GridBagConstraints.WEST;
-        grid.fill = GridBagConstraints.BOTH;
+        grid.fill = GridBagConstraints.HORIZONTAL;
         grid.gridy = 1;
         grid.gridx = 0;
         schList = new JList(new SchematicListModel(app, activeProf));
