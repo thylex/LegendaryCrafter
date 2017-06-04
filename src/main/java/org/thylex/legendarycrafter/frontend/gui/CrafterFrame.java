@@ -6,9 +6,11 @@
 package org.thylex.legendarycrafter.frontend.gui;
 
 import org.thylex.legendarycrafter.frontend.models.Item;
-import org.thylex.legendarycrafter.frontend.models.SchematicListModel;
+import org.thylex.legendarycrafter.frontend.models.SchematicTableModel;
 import org.thylex.legendarycrafter.frontend.models.InventoryTableModel;
 import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
@@ -23,6 +25,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
+import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
@@ -35,14 +38,14 @@ import org.thylex.legendarycrafter.frontend.app.CrafterApp;
  *
  * @author Henrik
  */
-public class CrafterFrame extends javax.swing.JFrame implements TableModelListener, ListSelectionListener {
+public class CrafterFrame extends javax.swing.JFrame implements TableModelListener {
 
     private CrafterApp app = null;
     private JTabbedPane tabPane = null;
     private JPanel invPanel = null;
     private JTable invTable = null;
     private JPanel schPanel = null;
-    private JList schList = null;
+    private JTable schTable = null;
     private String activeProf;
     private JButton calcButton = null;
 
@@ -69,6 +72,7 @@ public class CrafterFrame extends javax.swing.JFrame implements TableModelListen
 
         // Inventory Table display
         invTable = new JTable(new InventoryTableModel(app.getInvDB().getAllResources()));
+        invTable.setName("invTable");
         invTable.setFillsViewportHeight(true);
         invTable.getModel().addTableModelListener(this);
         setInvColumnWidth();
@@ -77,6 +81,7 @@ public class CrafterFrame extends javax.swing.JFrame implements TableModelListen
         // Create base Panel for Schematics view
         schPanel = setupSchematicsPanel(new JPanel());
         schPanel.setPreferredSize(this.getContentPane().getMaximumSize());
+        schPanel.doLayout();
 
         // Add Panels to Tabs
         tabPane.addTab("Schematics", schPanel);
@@ -86,6 +91,9 @@ public class CrafterFrame extends javax.swing.JFrame implements TableModelListen
         this.getContentPane().setLayout(new GridLayout(1, 1));
         this.getContentPane().add(tabPane);
 
+//        pack();
+        this.refresh();
+        doLayout();
         validate();
         this.setVisible(true);
     }
@@ -105,7 +113,8 @@ public class CrafterFrame extends javax.swing.JFrame implements TableModelListen
             //System.out.println("Skill group count: " + prof.getSkillGroups().size());
         }
         if (activeProf != null) {
-            profBox.getModel().setSelectedItem(activeProf);
+            Profession p = app.getStaticDB().getProfessionByName(activeProf);
+            profBox.getModel().setSelectedItem(new Item(p, p.getProfName()));
         }
         profBox.addActionListener(new java.awt.event.ActionListener() {
             @Override
@@ -127,12 +136,21 @@ public class CrafterFrame extends javax.swing.JFrame implements TableModelListen
         grid.fill = GridBagConstraints.HORIZONTAL;
         grid.gridy = 1;
         grid.gridx = 0;
-        schList = new JList(new SchematicListModel(app, activeProf));
-        schList.setLayoutOrientation(JList.VERTICAL);
-        schList.setVisibleRowCount(20);
-        schList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        schList.addListSelectionListener(this);
-        panel.add(new JScrollPane(schList), grid);
+        schTable = new JTable(new SchematicTableModel(app, activeProf));
+        schTable.setFillsViewportHeight(false);
+        schTable.setAutoscrolls(true);
+//        schTable.setPreferredSize(new Dimension(200, 150));
+        schTable.setName("schTable");
+
+        schTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        schTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                schematicSelected(e);
+            }
+        });
+//        schTable.invalidate();
+        panel.add(new JScrollPane(schTable), grid);
 
         //Third row
         grid.gridwidth = 1;
@@ -164,7 +182,7 @@ public class CrafterFrame extends javax.swing.JFrame implements TableModelListen
     }
 
     private void calcButtonAction(java.awt.event.ActionEvent e) {
-        Item sel = (Item) schList.getSelectedValue();
+        Item sel = (Item) schTable.getValueAt(schTable.getSelectedRow(), schTable.getSelectedColumn());
         Schematic s = (Schematic) sel.getValue();
         app.newCalculationWindow(s);
     }
@@ -173,13 +191,15 @@ public class CrafterFrame extends javax.swing.JFrame implements TableModelListen
         app.close();
     }
 
-    @Override
-    public void valueChanged(javax.swing.event.ListSelectionEvent e) {
-        JList list = (JList) e.getSource();
-        if (e.getValueIsAdjusting() != true) {
-            if (list.getSelectedValuesList().size() > 0) {
+    public void schematicSelected(javax.swing.event.ListSelectionEvent e) {
+        System.out.println("Schematic selection detected");
+        ListSelectionModel list = (ListSelectionModel) e.getSource();
+        int first = e.getFirstIndex();
+        int last = e.getLastIndex();
+        if (!e.getValueIsAdjusting()) {
+            if (!list.isSelectionEmpty()) {
                 calcButton.setEnabled(true);
-                Item sel = (Item) list.getSelectedValue();
+                Item sel = (Item) schTable.getValueAt(first, 0);
                 Schematic s = (Schematic) sel.getValue();
                 System.out.println("Schematic selected: " + s.getSchematicID());
                 List<SchematicIngredients> ingredList = s.getIngredients();
@@ -191,7 +211,7 @@ public class CrafterFrame extends javax.swing.JFrame implements TableModelListen
                     System.out.println("Quantity: " + si.getIngredientQuantity());
                     System.out.println("Contribution: " + si.getIngredientContribution());
                 }
-            } else if (list.getSelectedValuesList().isEmpty()) {
+            } else {
                 calcButton.setEnabled(false);
             }
         }
@@ -246,7 +266,7 @@ public class CrafterFrame extends javax.swing.JFrame implements TableModelListen
         invTable.setModel(new InventoryTableModel(app.getInvDB().getAllResources()));
         invTable.getModel().addTableModelListener(this);
         setInvColumnWidth();
-        schList.setModel(new SchematicListModel(app, activeProf));
+        schTable.setModel(new SchematicTableModel(app, activeProf));
         validate();
     }
 

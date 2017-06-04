@@ -21,6 +21,8 @@ import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlRootElement;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 
 /**
  *
@@ -40,7 +42,7 @@ public class SchematicQualities implements Serializable {
 
     private static final long serialVersionUID = 1L;
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    //@GeneratedValue(strategy = GenerationType.IDENTITY)
     @Basic(optional = false)
     @Column(name = "expQualityID")
     private Integer expQualityID;
@@ -52,9 +54,6 @@ public class SchematicQualities implements Serializable {
     private String expGroup;
     @Column(name = "weightTotal")
     private Short weightTotal;
-//    @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "schematicID", insertable = false, updatable = false)
-//    private Schematic schematic;
     @OneToMany(mappedBy = "expQualityID", fetch = FetchType.LAZY)
     private List<SchematicResWeights> resWeights;
 
@@ -88,14 +87,6 @@ public class SchematicQualities implements Serializable {
     public void setSchematicID(String schematicID) {
         this.schematicID = schematicID;
     }
-
-//    public Schematic getSchematic() {
-//        return schematic;
-//    }
-//
-//    public void setSchematic(Schematic schematic) {
-//        this.schematic = schematic;
-//    }
 
     public String getExpProperty() {
         return expProperty;

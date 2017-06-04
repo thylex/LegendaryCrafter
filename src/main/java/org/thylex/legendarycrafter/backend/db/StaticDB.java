@@ -137,6 +137,12 @@ public class StaticDB {
         q.setParameter("schematicID", schematicID);
         return q.getResultList();
     }
+    
+    public List<SchematicResWeights> getSrwByExpQualityID(Integer expQualityID) {
+        Query q = em.createNamedQuery("SchematicResWeights.findByExpQualityID");
+        q.setParameter("expQualityID", expQualityID);
+        return q.getResultList();
+    }
 
     public void bulkMerge(ArrayList list) {
         em.getTransaction().begin();

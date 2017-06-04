@@ -6,6 +6,7 @@
 package org.thylex.legendarycrafter.frontend.gui;
 
 import javax.swing.ComboBoxModel;
+import org.thylex.legendarycrafter.frontend.models.Item;
 
 /**
  *
@@ -34,6 +35,14 @@ public class Type0Panel extends javax.swing.JPanel {
     
     public void setMaterialBoxActionListener(java.awt.event.ActionListener listener) {
         jComboBox1.addActionListener(listener);
+    }
+    
+    public Item getSelectedMaterial() {
+        if (jComboBox1.getSelectedItem() != null) {
+            return (Item) jComboBox1.getSelectedItem();
+        } else {
+            return null;
+        }
     }
 
     /**

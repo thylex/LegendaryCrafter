@@ -25,6 +25,7 @@ import org.thylex.legendarycrafter.backend.db.entity.stat.ResourceType;
 import org.thylex.legendarycrafter.backend.db.entity.stat.Schematic;
 import org.thylex.legendarycrafter.backend.db.entity.stat.SchematicIngredients;
 import org.thylex.legendarycrafter.backend.db.entity.stat.SchematicQualities;
+import org.thylex.legendarycrafter.backend.db.entity.stat.SchematicResWeights;
 import org.thylex.legendarycrafter.frontend.app.CrafterApp;
 import org.thylex.legendarycrafter.frontend.models.Item;
 
@@ -65,7 +66,7 @@ public class CalculationFrame extends javax.swing.JFrame implements java.awt.eve
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
         for (SchematicIngredients si : schem.getIngredients()) {
-            System.out.println("Adding: " + si.getIngredientName());
+            System.out.println("Adding: " + si.getIngredientName() + " " + si.getIngredientType().toString());
             gbc.gridy = row;
             if (si.getIngredientType() == 0) {
                 Type0Panel panel = new Type0Panel();
@@ -89,6 +90,18 @@ public class CalculationFrame extends javax.swing.JFrame implements java.awt.eve
                 panel.setRequiredText(si.getIngredientName().replace("_", " "));
                 this.getContentPane().add(panel, gbc);
             }
+            if (si.getIngredientType() == 4) {
+                Type4Panel panel = new Type4Panel();
+                String[] parts = si.getIngredientObject().split("/");
+                System.out.println("Split one size " + parts.length);
+                System.out.println("Split one p5 " + parts[4]);
+                String[] parts2 = parts[4].split("\\.");
+                System.out.println("Split two size " + parts2.length);
+                String name = parts2[0].replaceAll("_", " ");
+                panel.setBorder(new TitledBorder(si.getIngredientName().replaceAll("_", " ")));
+                panel.setRequiredText(si.getIngredientQuantity() + " x " + name);
+                this.getContentPane().add(panel, gbc);
+            }
             row++;
         }
 
@@ -97,7 +110,7 @@ public class CalculationFrame extends javax.swing.JFrame implements java.awt.eve
         gbc.gridheight = row++;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         this.getContentPane().add(setupGeneralInfoPanel(), gbc);
-        
+
         gbc.gridx = 1;
         gbc.gridy = row;
         gbc.gridheight = 1;
@@ -139,9 +152,27 @@ public class CalculationFrame extends javax.swing.JFrame implements java.awt.eve
 
         if (schem.getSchematicQualities().size() > 0) {
             for (SchematicQualities sq : schem.getSchematicQualities()) {
-                gbc.gridy = row++;
-                //System.out.println("Adding gen info: " + sq.getExpProperty());
-                panel.add(new JLabel(sq.getExpProperty()), gbc);
+                if (sq.getWeightTotal() != 0) {
+                    JPanel expPanel = new JPanel();
+                    expPanel.setLayout(new GridBagLayout());
+                    GridBagConstraints expGrid = new GridBagConstraints();
+                    expPanel.setBorder(new TitledBorder(sq.getExpProperty()));
+                    expGrid.anchor = GridBagConstraints.NORTHWEST;
+                    expGrid.fill = GridBagConstraints.HORIZONTAL;
+                    int expRow = 0;
+                    for (SchematicResWeights srw : sq.getResWeights()) {
+                        System.out.println("Adding res weight: " + srw.getStatName());
+                        expGrid.gridy = expRow++;
+                        expGrid.gridx = 0;
+                        expPanel.add(new JLabel(srw.getStatName()), expGrid);
+                        expGrid.gridx = 1;
+                        int resWeight = (srw.getStatWeight() / sq.getWeightTotal()) * 100;
+                        expPanel.add(new JLabel(resWeight + "%"), expGrid);
+                    }
+                    expPanel.doLayout();
+                    gbc.gridy = row++;
+                    panel.add(expPanel, gbc);
+                }
             }
         } else {
             System.out.println("SQ count: " + schem.getSchematicQualities().size());
@@ -188,7 +219,7 @@ public class CalculationFrame extends javax.swing.JFrame implements java.awt.eve
             materialBoxSelection(si, res);
         }
     }
-    
+
     private void closeAction() {
         this.dispose();
     }
