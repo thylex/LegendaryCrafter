@@ -9,27 +9,33 @@ import org.thylex.legendarycrafter.frontend.models.Item;
 import org.thylex.legendarycrafter.frontend.models.SchematicTableModel;
 import org.thylex.legendarycrafter.frontend.models.InventoryTableModel;
 import java.awt.BorderLayout;
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
 import java.awt.GridLayout;
+import java.awt.Point;
 import java.awt.event.ActionEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
-import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
+import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
+import javax.swing.RowFilter;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.TableColumnModel;
+import javax.swing.table.TableRowSorter;
+import javax.swing.text.BadLocationException;
 import org.thylex.legendarycrafter.backend.db.entity.inv.Resource;
 import org.thylex.legendarycrafter.backend.db.entity.stat.*;
 import org.thylex.legendarycrafter.frontend.app.CrafterApp;
@@ -48,6 +54,7 @@ public class CrafterFrame extends javax.swing.JFrame implements TableModelListen
     private JTable schTable = null;
     private String activeProf;
     private JButton calcButton = null;
+    private TableRowSorter<SchematicTableModel> sorter = null;
 
     /**
      * Creates new form CrafterGUI
@@ -80,9 +87,10 @@ public class CrafterFrame extends javax.swing.JFrame implements TableModelListen
 
         // Create base Panel for Schematics view
         schPanel = setupSchematicsPanel(new JPanel());
-        schPanel.setPreferredSize(this.getContentPane().getMaximumSize());
-        schPanel.doLayout();
+        //schPanel.setAutoscrolls(true);
 
+        //schPanel.setPreferredSize(this.getContentPane().getMaximumSize());
+        //schPanel.doLayout();
         // Add Panels to Tabs
         tabPane.addTab("Schematics", schPanel);
         tabPane.addTab("Inventory", invPanel);
@@ -99,14 +107,9 @@ public class CrafterFrame extends javax.swing.JFrame implements TableModelListen
     }
 
     private JPanel setupSchematicsPanel(JPanel panel) {
-        panel.setLayout(new GridBagLayout());
-        GridBagConstraints grid = new GridBagConstraints();
-        grid.fill = GridBagConstraints.HORIZONTAL;
+        panel.setLayout(new BorderLayout());
 
-        //First row
-        grid.gridy = 0;
-        grid.gridx = 0;
-        grid.anchor = GridBagConstraints.NORTHWEST;
+        JPanel topPanel = new JPanel();
         JComboBox profBox = new JComboBox();
         for (Profession prof : app.getStaticDB().getAllProfessions()) {
             profBox.addItem(new Item(prof, prof.getProfName()));
@@ -125,21 +128,39 @@ public class CrafterFrame extends javax.swing.JFrame implements TableModelListen
         JLabel profLabel = new JLabel("Select profession");
         profLabel.setLabelFor(profBox);
 
-        panel.add(profLabel, grid);
-        grid.gridx = 1;
-        grid.fill = GridBagConstraints.NONE;
-        panel.add(profBox, grid);
+        topPanel.add(profLabel);
+        topPanel.add(profBox);
+
+        JTextField filterText = new JTextField();
+        filterText.setColumns(20);
+        filterText.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                filterTextAction(e);
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                filterTextAction(e);
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                filterTextAction(e);
+            }
+        });
+        JLabel filterLabel = new JLabel("Filter schematics: ");
+        filterLabel.setLabelFor(filterText);
+
+        topPanel.add(filterLabel);
+        topPanel.add(filterText);
+
+        panel.add(topPanel, BorderLayout.NORTH);
 
         //Second row
-        grid.gridwidth = 2;
-        grid.anchor = GridBagConstraints.WEST;
-        grid.fill = GridBagConstraints.HORIZONTAL;
-        grid.gridy = 1;
-        grid.gridx = 0;
         schTable = new JTable(new SchematicTableModel(app, activeProf));
         schTable.setFillsViewportHeight(false);
         schTable.setAutoscrolls(true);
-//        schTable.setPreferredSize(new Dimension(200, 150));
         schTable.setName("schTable");
 
         schTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -149,15 +170,26 @@ public class CrafterFrame extends javax.swing.JFrame implements TableModelListen
                 schematicSelected(e);
             }
         });
+        schTable.addMouseListener(new MouseAdapter() {
+            public void mousePressed(MouseEvent mouseEvent) {
+                JTable table = (JTable) mouseEvent.getSource();
+                Point point = mouseEvent.getPoint();
+                int row = table.rowAtPoint(point);
+                if (mouseEvent.getClickCount() == 2) {
+                    Item sel = (Item) schTable.getValueAt(schTable.getSelectedRow(), schTable.getSelectedColumn());
+                    Schematic s = (Schematic) sel.getValue();
+                    app.newCalculationWindow(s);
+                }
+            }
+        });
+        sorter = new TableRowSorter<SchematicTableModel>((SchematicTableModel) schTable.getModel());
+
 //        schTable.invalidate();
-        panel.add(new JScrollPane(schTable), grid);
+        panel.add(new JScrollPane(schTable), BorderLayout.CENTER);
 
         //Third row
-        grid.gridwidth = 1;
-        grid.fill = GridBagConstraints.NONE;
-        grid.anchor = GridBagConstraints.SOUTHWEST;
-        grid.gridy = 2;
-        grid.gridx = 0;
+        JPanel botPanel = new JPanel();
+
         calcButton = new JButton("Calculate");
         calcButton.setName("calcButton");
         calcButton.addActionListener(new java.awt.event.ActionListener() {
@@ -167,9 +199,9 @@ public class CrafterFrame extends javax.swing.JFrame implements TableModelListen
             }
         });
         calcButton.setEnabled(false);
-        panel.add(calcButton, grid);
-        grid.gridx = 1;
-        grid.anchor = GridBagConstraints.SOUTHEAST;
+
+        botPanel.add(calcButton);
+
         JButton exitButton = new JButton("Exit");
         exitButton.addActionListener(new java.awt.event.ActionListener() {
             @Override
@@ -177,10 +209,25 @@ public class CrafterFrame extends javax.swing.JFrame implements TableModelListen
                 exitButtonAction(e);
             }
         });
-        panel.add(exitButton, grid);
+        botPanel.add(exitButton);
+        panel.add(botPanel, BorderLayout.SOUTH);
         return panel;
     }
 
+    private void filterTextAction(javax.swing.event.DocumentEvent e) {
+        RowFilter<SchematicTableModel, Object> rf = null;
+        System.out.println("Filter text event fired");
+    //If current expression doesn't parse, don't update.
+    try {
+        rf = RowFilter.regexFilter(e.getDocument().getText(0, e.getDocument().getLength()),0);
+    } catch (java.util.regex.PatternSyntaxException ex) {
+        return;
+    }   catch (BadLocationException ex) {
+            Logger.getLogger(CrafterFrame.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    sorter.setRowFilter(rf);
+    }
+    
     private void calcButtonAction(java.awt.event.ActionEvent e) {
         Item sel = (Item) schTable.getValueAt(schTable.getSelectedRow(), schTable.getSelectedColumn());
         Schematic s = (Schematic) sel.getValue();
@@ -267,6 +314,7 @@ public class CrafterFrame extends javax.swing.JFrame implements TableModelListen
         invTable.getModel().addTableModelListener(this);
         setInvColumnWidth();
         schTable.setModel(new SchematicTableModel(app, activeProf));
+        sorter = new TableRowSorter<SchematicTableModel>((SchematicTableModel) schTable.getModel());
         validate();
     }
 

@@ -29,15 +29,15 @@ public class Type0Panel extends javax.swing.JPanel {
         jLabel2.setText(string);
     }
     
-    public void setMaterialBoxModel(ComboBoxModel model) {
+    public void setResourceBoxModel(ComboBoxModel model) {
         jComboBox1.setModel(model);
     }
     
-    public void setMaterialBoxActionListener(java.awt.event.ActionListener listener) {
+    public void setResourceBoxActionListener(java.awt.event.ActionListener listener) {
         jComboBox1.addActionListener(listener);
     }
     
-    public Item getSelectedMaterial() {
+    public Item getSelectedResource() {
         if (jComboBox1.getSelectedItem() != null) {
             return (Item) jComboBox1.getSelectedItem();
         } else {

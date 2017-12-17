@@ -7,6 +7,7 @@ package org.thylex.legendarycrafter.frontend.gui;
 
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
@@ -59,8 +60,8 @@ public class CalculationFrame extends javax.swing.JFrame implements java.awt.eve
         this.setTitle(schem.getSchematicName());
         this.getContentPane().setLayout(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
-        int nrIngreds = schem.getIngredients().size();
         int row = 0;
+        gbc.insets = new Insets(3, 3, 2, 2);
         gbc.gridx = 0;
         gbc.anchor = GridBagConstraints.WEST;
         gbc.fill = GridBagConstraints.HORIZONTAL;
@@ -79,8 +80,8 @@ public class CalculationFrame extends javax.swing.JFrame implements java.awt.eve
                 for (ResourceGroup resGrp : rgList) {
                     rtList.addAll(app.getStaticDB().getResourceTypeByGroup(resGrp.getResourceGroup()));
                 }
-                panel.setMaterialBoxActionListener(this);
-                panel.setMaterialBoxModel(setupMatBoxModel(rtList, si));
+                panel.setResourceBoxActionListener(this);
+                panel.setResourceBoxModel(setupMatBoxModel(rtList, si));
                 this.getContentPane().add(panel, gbc);
                 type0List.add(panel);
             }
@@ -125,7 +126,7 @@ public class CalculationFrame extends javax.swing.JFrame implements java.awt.eve
         });
         this.getContentPane().add(close, gbc);
 
-        this.pack();
+        //this.pack();
         this.validate();
         this.setVisible(true);
     }
@@ -161,12 +162,14 @@ public class CalculationFrame extends javax.swing.JFrame implements java.awt.eve
                     expGrid.fill = GridBagConstraints.HORIZONTAL;
                     int expRow = 0;
                     for (SchematicResWeights srw : sq.getResWeights()) {
-                        System.out.println("Adding res weight: " + srw.getStatName());
+                        //System.out.println("Adding res weight: " + srw.getStatName());
                         expGrid.gridy = expRow++;
                         expGrid.gridx = 0;
-                        expPanel.add(new JLabel(srw.getStatName()), expGrid);
+                        expPanel.add(new JLabel(srw.getStatName()+ " "), expGrid);
                         expGrid.gridx = 1;
-                        int resWeight = (srw.getStatWeight() / sq.getWeightTotal()) * 100;
+                        //System.out.println("SRW: " + srw.getStatWeight());
+                        //System.out.println("SQ: " + sq.getWeightTotal());
+                        int resWeight = (int) ((srw.getStatWeight().floatValue() / sq.getWeightTotal().floatValue()) * 100.0);
                         expPanel.add(new JLabel(resWeight + "%"), expGrid);
                     }
                     expPanel.doLayout();
@@ -192,6 +195,7 @@ public class CalculationFrame extends javax.swing.JFrame implements java.awt.eve
                 //System.out.println("Getting resource of type: " + rt.getResourceTypeName());
             }
         }
+        
         //System.out.println("Total resources found: " + resList.size());
         for (Resource res : resList) {
             ArrayList itemList = new ArrayList();
